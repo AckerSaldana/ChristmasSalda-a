@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Feliz Navidad - Familia Saldaña Polanco</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            overflow: hidden; 
+            background-color: #020408;
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        canvas { 
+            display: block; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            outline: none;
+        }
+        
+        /* Cinematic Loading Screen */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #020408 0%, #0a1628 50%, #020408 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #loader.hidden {
+            opacity: 0;
+            transform: scale(1.1);
+            pointer-events: none;
+        }
+        
+        .loader-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 8vw, 5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700 0%, #fff 50%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: shimmer 2s ease-in-out infinite;
+            background-size: 200% 100%;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { background-position: 200% center; }
+            50% { background-position: 0% center; }
+        }
+        
+        .loader-progress {
+            width: min(300px, 80vw);
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .loader-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffd700, #fff, #ffd700);
+            border-radius: 3px;
+            transition: width 0.3s ease-out;
+        }
+        
+        .loader-text {
+            margin-top: 1.5rem;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+        
+        /* UI Overlay */
+        #ui {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 1s ease 0.5s;
+        }
+        
+        #ui.visible {
+            opacity: 1;
+        }
+        
+        .title-container {
+            position: absolute;
+            top: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 100%;
+        }
+        
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 5vw, 3.5rem);
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 60px rgba(255, 215, 0, 0.4);
+            letter-spacing: 0.1em;
+        }
+        
+        .subtitle {
+            font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+            color: rgba(255,255,255,0.8);
+            margin-top: 0.5rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .message-container {
+            position: absolute;
+            bottom: 12vh;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            pointer-events: none;
+        }
+        
+        .main-message {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1rem, 3vw, 1.6rem);
+            color: #fff;
+            text-shadow: 0 2px 20px rgba(255, 215, 0, 0.4);
+            opacity: 0;
+            margin-bottom: 0.5rem;
+        }
+        
+        .sub-message {
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            color: rgba(255, 215, 0, 0.9);
+            font-style: italic;
+            opacity: 0;
+        }
+        
+        .star-hint {
+            position: absolute;
+            top: 16vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 215, 0, 0.5);
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            opacity: 0;
+            animation: pulse 2s ease-in-out 3s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 3vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 3vh;
+            right: 3vw;
+            display: flex;
+            gap: 0.8rem;
+            pointer-events: all;
+        }
+        
+        .control-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        
+        .control-btn.active {
+            background: rgba(255,215,0,0.2);
+            border-color: rgba(255,215,0,0.5);
+            color: #ffd700;
+        }
+        
+        .control-btn svg { width: 20px; height: 20px; }
+        
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-card {
+            background: linear-gradient(145deg, #1a2a1a, #0d1f0d);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 380px;
+            width: 85%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        
+        .modal-icon { font-size: 3rem; margin-bottom: 0.8rem; }
+        
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 0.8rem;
+        }
+        
+        .modal-message {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+            margin-bottom: 1.2rem;
+        }
+        
+        .modal-close {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border: none;
+            color: #1a1a1a;
+            padding: 0.7rem 1.8rem;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .modal-close:hover { transform: scale(1.05); }
+        
+        /* Vignette effect */
+        .vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(2,4,8,0.8) 100%);
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <div class="loader-title">Feliz Navidad</div>
+        <div class="loader-progress">
+            <div class="loader-bar" id="loaderBar"></div>
+        </div>
+        <div class="loader-text">Preparando magia...</div>
+    </div>
+    
+    <div id="ui">
+        <div class="title-container">
+            <h1 class="main-title">✦ Feliz Navidad ✦</h1>
+            <p class="subtitle">Familia Saldaña Polanco</p>
+        </div>
+        
+        <p class="star-hint">✦ Toca la estrella ✦</p>
+        
+        <div class="message-container">
+            <p class="main-message" id="mainMessage">Les deseamos una Feliz Navidad llena de amor y bendiciones</p>
+            <p class="sub-message" id="subMessage">Con cariño, la Familia Saldaña Polanco</p>
+        </div>
+        
+        <p class="instructions">Arrastra para rotar • Toca los regalos</p>
+        
+        <div class="controls">
+            <button class="control-btn" id="musicToggle" title="Música">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                </svg>
+            </button>
+            <button class="control-btn active" id="snowToggle" title="Nieve">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="giftModal">
+        <div class="modal-card">
+            <span class="modal-icon" id="modalIcon">🎁</span>
+            <h2 class="modal-title" id="modalTitle">¡Feliz Navidad!</h2>
+            <p class="modal-message" id="modalMessage">Mensaje especial</p>
+            <button class="modal-close" id="modalClose">Gracias ✨</button>
+        </div>
+    </div>
+    
+    <div class="vignette"></div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const config = {
+            ornamentColors: [0xff1a1a, 0xffd700, 0xc0c0c0, 0x2255ff, 0xff44aa, 0x44ffaa],
+            lightColors: [0xffffff, 0xffd700, 0xff6600, 0xff0066, 0x00ff88],
+            snowCount: 1200,
+            cameraDistance: 26
+        };
+
+        // ============================================
+        // GLOBALS
+        // ============================================
+        let scene, camera, renderer, composer, clock;
+        let treeGroup, snowSystem, starGroup, magicParticles;
+        let fairyLights = [], ornaments = [], gifts = [];
+        let raycaster, mouse;
+        
+        // Fireworks
+        let fireworkParticles = null;
+        let fireworkData = [];
+        const MAX_PARTICLES = 800;
+        
+        let cameraAngle = 0;
+        let targetAngle = 0;
+        let cameraHeight = 0.4;
+        let targetHeight = 0.4;
+        let cameraRadius = config.cameraDistance;
+        let targetRadius = config.cameraDistance;
+        
+        let isDragging = false;
+        let prevMouseX = 0, prevMouseY = 0;
+        let autoRotate = true;
+        let snowEnabled = true;
+        
+        // Audio
+        let audioCtx, musicPlaying = false, musicSource;
+        
+        // Gift messages
+        const giftMessages = [
+            { icon: "🎄", title: "¡Paz y Armonía!", message: "Que esta Navidad traiga paz a tu corazón y armonía a tu hogar." },
+            { icon: "⭐", title: "¡Sueños que Brillan!", message: "Que todas tus metas se iluminen como las estrellas en esta noche especial." },
+            { icon: "❤️", title: "¡Amor Infinito!", message: "El mejor regalo es el amor que compartimos en familia. ¡Te queremos!" },
+            { icon: "🎅", title: "¡Magia Navideña!", message: "Que la magia de la Navidad llene tu vida de momentos inolvidables." },
+            { icon: "🌟", title: "¡Bendiciones!", message: "Que Dios bendiga tu hogar con salud, prosperidad y felicidad." },
+            { icon: "🎁", title: "¡Sorpresas!", message: "La vida está llena de sorpresas. ¡Que el 2026 te traiga las mejores!" },
+            { icon: "☃️", title: "¡Alegría!", message: "Que tu corazón se llene de la alegría que solo la Navidad puede traer." },
+            { icon: "🕯️", title: "¡Esperanza!", message: "Como esta luz que brilla, que la esperanza ilumine siempre tu camino." },
+            { icon: "🔔", title: "¡Celebración!", message: "¡Que las campanas anuncien un año lleno de éxitos y bendiciones!" },
+            { icon: "💫", title: "¡Nuevos Comienzos!", message: "Cada Navidad es una oportunidad para empezar de nuevo." },
+            { icon: "🤗", title: "¡Abrazos!", message: "Te enviamos un abrazo gigante lleno de cariño y buenos deseos." },
+            { icon: "✨", title: "¡Momentos Especiales!", message: "Que cada momento de estas fiestas sea un recuerdo hermoso." }
+        ];
+
+        // Initialize
+        init();
+
+        function init() {
+            clock = new THREE.Clock();
+            
+            // Scene - atmospheric night
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020510);
+            scene.fog = new THREE.FogExp2(0x0a1828, 0.012); // Lighter fog, less dense
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
+            updateCamera();
+            
+            // Raycaster
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1; // Balanced exposure
+            document.body.appendChild(renderer.domElement);
+            
+            updateLoader(20);
+            
+            // Post-processing - subtle bloom
+            composer = new EffectComposer(renderer);
+            composer.addPass(new RenderPass(scene, camera));
+            const bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight), 
+                0.6,  // Bloom strength
+                0.5,  // Radius
+                0.7   // Threshold
+            );
+            composer.addPass(bloomPass);
+            composer.addPass(new OutputPass());
+            
+            updateLoader(30);
+            
+            // ============================================
+            // BALANCED LIGHTING - Bright but atmospheric
+            // ============================================
+            
+            // Ambient light - provides base visibility
+            const ambientLight = new THREE.AmbientLight(0x4466aa, 0.6);
+            scene.add(ambientLight);
+            
+            // Moon light - cool blue from above
+            const moonLight = new THREE.DirectionalLight(0x88aadd, 1.0);
+            moonLight.position.set(-10, 30, 10);
+            moonLight.castShadow = true;
+            moonLight.shadow.mapSize.width = 2048;
+            moonLight.shadow.mapSize.height = 2048;
+            moonLight.shadow.camera.near = 5;
+            moonLight.shadow.camera.far = 60;
+            moonLight.shadow.camera.left = -20;
+            moonLight.shadow.camera.right = 20;
+            moonLight.shadow.camera.top = 20;
+            moonLight.shadow.camera.bottom = -20;
+            moonLight.shadow.bias = -0.0005;
+            scene.add(moonLight);
+            
+            // Warm front fill light
+            const fillLight = new THREE.DirectionalLight(0xffeedd, 0.5);
+            fillLight.position.set(8, 12, 18);
+            scene.add(fillLight);
+            
+            // Tree internal glow - warm golden (multiple for better coverage)
+            const treeGlow = new THREE.PointLight(0xffaa44, 3.0, 22);
+            treeGlow.position.set(0, 4, 0);
+            scene.add(treeGlow);
+            
+            // Mid tree glow
+            const treeGlow2 = new THREE.PointLight(0xffcc66, 2.0, 18);
+            treeGlow2.position.set(0, 7, 0);
+            scene.add(treeGlow2);
+            
+            // Upper tree glow
+            const treeGlow3 = new THREE.PointLight(0xffdd88, 1.5, 12);
+            treeGlow3.position.set(0, 9, 0);
+            scene.add(treeGlow3);
+            
+            // Ground bounce light
+            const bounceLight = new THREE.HemisphereLight(0x8899bb, 0x444466, 0.4);
+            scene.add(bounceLight);
+            
+            updateLoader(40);
+            
+            // Ground - darker snow with blue tint
+            createGround();
+            
+            updateLoader(50);
+            
+            // Tree
+            createTree();
+            updateLoader(65);
+            
+            // Gifts
+            createGifts();
+            updateLoader(75);
+            
+            // Snow
+            createSnow();
+            updateLoader(80);
+            
+            // Magic Floating Dust
+            createMagicDust();
+            updateLoader(85);
+
+            // Stars in sky
+            createStars();
+            
+            // Initialize fireworks system
+            initFireworksSystem();
+            
+            updateLoader(95);
+            
+            // Events
+            setupEvents();
+            
+            updateLoader(100);
+            
+            // Hide loader
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('ui').classList.add('visible');
+                
+                gsap.to('#mainMessage', { opacity: 1, duration: 1.5, delay: 1 });
+                gsap.to('#subMessage', { opacity: 1, duration: 1.5, delay: 2 });
+                
+                animate();
+            }, 600);
+        }
+        
+        function updateLoader(p) {
+            document.getElementById('loaderBar').style.width = p + '%';
+        }
+        
+        function createGround() {
+            // Snowy ground - flat in center, undulating at edges
+            const groundGeo = new THREE.PlaneGeometry(80, 80, 64, 64);
+            const pos = groundGeo.attributes.position;
+            
+            for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i);
+                const y = pos.getY(i);
+                const dist = Math.sqrt(x * x + y * y);
+                
+                // Only add undulation far from center (where gifts are)
+                let z = 0;
+                if (dist > 8) {
+                    // Gentle undulation starts outside gift area
+                    const factor = Math.min(1, (dist - 8) / 10);
+                    z = (Math.sin(x * 0.08) * Math.cos(y * 0.08) * 0.5 + 
+                         Math.sin(x * 0.3 + y * 0.2) * 0.1) * factor;
+                }
+                
+                pos.setZ(i, z);
+            }
+            groundGeo.computeVertexNormals();
+            
+            // Snow material - white with slight blue tint
+            const groundMat = new THREE.MeshStandardMaterial({ 
+                color: 0xdde5f0,
+                roughness: 0.8,
+                metalness: 0.05
+            });
+            
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = 0;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Add some snow mounds far from center
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.5;
+                const dist = 10 + Math.random() * 5; // Further out
+                const mound = new THREE.Mesh(
+                    new THREE.SphereGeometry(1.5 + Math.random(), 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+                    groundMat
+                );
+                mound.position.set(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
+                mound.scale.y = 0.3;
+                mound.receiveShadow = true;
+                scene.add(mound);
+            }
+        }
+        
+        function createTree() {
+            treeGroup = new THREE.Group();
+            
+            // Trunk - darker brown
+            const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.35, 0.5, 2.2, 12),
+                new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.95 })
+            );
+            trunk.position.y = 1.1;
+            trunk.castShadow = true;
+            treeGroup.add(trunk);
+            
+            // Foliage layers - rich greens with some self-illumination
+            const greens = [0x1a5530, 0x227738, 0x1a4d2a];
+            const layers = [
+                { y: 1.6, r: 4.0, h: 3.4 },
+                { y: 3.1, r: 3.4, h: 3.0 },
+                { y: 4.4, r: 2.9, h: 2.7 },
+                { y: 5.6, r: 2.3, h: 2.4 },
+                { y: 6.7, r: 1.8, h: 2.1 },
+                { y: 7.7, r: 1.3, h: 1.8 },
+                { y: 8.5, r: 0.85, h: 1.5 },
+                { y: 9.2, r: 0.45, h: 1.2 }
+            ];
+            
+            layers.forEach((l, i) => {
+                const cone = new THREE.Mesh(
+                    new THREE.ConeGeometry(l.r, l.h, 32),
+                    new THREE.MeshStandardMaterial({ 
+                        color: greens[i % 3], 
+                        roughness: 0.75, 
+                        side: THREE.DoubleSide,
+                        emissive: 0x112211,
+                        emissiveIntensity: 0.15
+                    })
+                );
+                cone.position.y = l.y + l.h / 2;
+                cone.castShadow = true;
+                cone.receiveShadow = true;
+                treeGroup.add(cone);
+                
+                addDecorations(l, i);
+            });
+            
+            // Star
+            createStar(10.5);
+            
+            scene.add(treeGroup);
+        }
+        
+        function addDecorations(layer, idx) {
+            const ornCount = Math.max(3, 7 - idx);
+            const lightCount = Math.max(4, 9 - idx);
+            
+            // Ornaments
+            for (let i = 0; i < ornCount; i++) {
+                const angle = (i / ornCount) * Math.PI * 2 + idx * 0.5;
+                const hPct = 0.2 + Math.random() * 0.5;
+                const r = layer.r * (1 - hPct) + 0.25;
+                
+                const color = config.ornamentColors[Math.floor(Math.random() * config.ornamentColors.length)];
+                const size = 0.14 + Math.random() * 0.1;
+                
+                const orb = new THREE.Mesh(
+                    new THREE.SphereGeometry(size, 16, 16),
+                    new THREE.MeshStandardMaterial({ 
+                        color, 
+                        roughness: 0.1, 
+                        metalness: 0.9,
+                        emissive: color,
+                        emissiveIntensity: 0.2
+                    })
+                );
+                
+                const y = layer.y + layer.h * hPct;
+                orb.position.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
+                orb.castShadow = true;
+                treeGroup.add(orb);
+                
+                ornaments.push({ mesh: orb, baseY: y, phase: Math.random() * Math.PI * 2 });
+            }
+            
+            // Fairy lights - smaller, more numerous
+            for (let i = 0; i < lightCount; i++) {
+                const angle = (i / lightCount) * Math.PI * 2 + idx * 1.1;
+                const hPct = 0.15 + Math.random() * 0.6;
+                const r = layer.r * (1 - hPct) + 0.18;
+                
+                const color = config.lightColors[Math.floor(Math.random() * config.lightColors.length)];
+                
+                const light = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.05, 8, 8),
+                    new THREE.MeshBasicMaterial({ color })
+                );
+                
+                light.position.set(Math.cos(angle) * r, layer.y + layer.h * hPct, Math.sin(angle) * r);
+                treeGroup.add(light);
+                
+                fairyLights.push({ mesh: light, phase: Math.random() * Math.PI * 2, speed: 1 + Math.random() * 2 });
+            }
+        }
+        
+        function createMagicDust() {
+            const count = 200;
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(count * 3);
+            const speeds = new Float32Array(count);
+            
+            for (let i = 0; i < count; i++) {
+                const r = 1.5 + Math.random() * 5;
+                const theta = Math.random() * Math.PI * 2;
+                const y = Math.random() * 11;
+                
+                pos[i * 3] = r * Math.cos(theta);
+                pos[i * 3 + 1] = y;
+                pos[i * 3 + 2] = r * Math.sin(theta);
+                
+                speeds[i] = 0.3 + Math.random() * 0.7;
+            }
+            
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            geo.setAttribute('speed', new THREE.BufferAttribute(speeds, 1));
+            
+            const mat = new THREE.PointsMaterial({
+                color: 0xffcc44,
+                size: 0.08,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            
+            magicParticles = new THREE.Points(geo, mat);
+            scene.add(magicParticles);
+        }
+
+        function createStar(y) {
+            starGroup = new THREE.Group();
+            
+            const shape = new THREE.Shape();
+            const outer = 0.5, inner = 0.22;
+            
+            for (let i = 0; i < 10; i++) {
+                const r = i % 2 === 0 ? outer : inner;
+                const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+                if (i === 0) shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+                else shape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+            }
+            shape.closePath();
+            
+            const starGeo = new THREE.ExtrudeGeometry(shape, { 
+                depth: 0.15, 
+                bevelEnabled: true, 
+                bevelSize: 0.05, 
+                bevelThickness: 0.05 
+            });
+            starGeo.translate(0, 0, -0.075);
+            
+            const starMat = new THREE.MeshStandardMaterial({
+                color: 0xffd700, 
+                emissive: 0xffaa00, 
+                emissiveIntensity: 2.0, 
+                roughness: 0.1, 
+                metalness: 1
+            });
+            
+            const star1 = new THREE.Mesh(starGeo, starMat);
+            const star2 = new THREE.Mesh(starGeo.clone(), starMat);
+            star2.rotation.y = Math.PI;
+            starGroup.add(star1, star2);
+            
+            // Glow halo
+            const glow = new THREE.Mesh(
+                new THREE.SphereGeometry(0.7, 16, 16),
+                new THREE.MeshBasicMaterial({ 
+                    color: 0xffaa00, 
+                    transparent: true, 
+                    opacity: 0.15, 
+                    side: THREE.BackSide 
+                })
+            );
+            starGroup.add(glow);
+            starGroup.userData.glow = glow;
+            
+            starGroup.position.y = y;
+            treeGroup.add(starGroup);
+            
+            // Star light
+            const starLight = new THREE.PointLight(0xffd700, 2.0, 12);
+            starLight.position.y = y;
+            treeGroup.add(starLight);
+            treeGroup.userData.starLight = starLight;
+        }
+        
+        function createGifts() {
+            const colors = [0xff2222, 0x22aa22, 0x2266ff, 0xffcc00, 0xaa22aa, 0xff6622];
+            
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.3;
+                const dist = 2.8 + Math.random() * 2.2;
+                
+                const w = 0.5 + Math.random() * 0.3;
+                const h = 0.5 + Math.random() * 0.3;
+                const d = 0.5 + Math.random() * 0.3;
+                
+                const box = new THREE.Mesh(
+                    new THREE.BoxGeometry(w, h, d),
+                    new THREE.MeshStandardMaterial({ 
+                        color: colors[i % colors.length], 
+                        roughness: 0.3,
+                        metalness: 0.1,
+                        emissive: colors[i % colors.length],
+                        emissiveIntensity: 0.15
+                    })
+                );
+                
+                // Position exactly on ground (y=0 is ground level, flat area)
+                const yPos = h / 2;
+                box.position.set(Math.cos(angle) * dist, yPos, Math.sin(angle) * dist);
+                box.rotation.y = Math.random() * Math.PI;
+                box.castShadow = true;
+                box.receiveShadow = true;
+                box.userData = { isGift: true, msgIdx: i % giftMessages.length, baseY: yPos };
+                
+                // Bright white ribbon
+                const ribMat = new THREE.MeshStandardMaterial({ 
+                    color: 0xffffff,
+                    roughness: 0.2,
+                    metalness: 0.3,
+                    emissive: 0xffffff,
+                    emissiveIntensity: 0.1
+                });
+                const t = 0.06;
+                
+                const r1 = new THREE.Mesh(new THREE.BoxGeometry(w + 0.01, t, d + 0.01), ribMat);
+                r1.position.y = h / 2 - t / 2;
+                box.add(r1);
+                
+                const r2 = new THREE.Mesh(new THREE.BoxGeometry(t, h + 0.01, d + 0.01), ribMat);
+                box.add(r2);
+                
+                const r3 = new THREE.Mesh(new THREE.BoxGeometry(w + 0.01, h + 0.01, t), ribMat);
+                box.add(r3);
+                
+                // Gold bow
+                const bowMat = new THREE.MeshStandardMaterial({ 
+                    color: 0xffdd44,
+                    roughness: 0.2,
+                    metalness: 0.6,
+                    emissive: 0xffaa00,
+                    emissiveIntensity: 0.2
+                });
+                const bowGeo = new THREE.TorusGeometry(0.1, 0.03, 8, 12);
+                
+                const b1 = new THREE.Mesh(bowGeo, bowMat);
+                b1.position.set(-0.07, h / 2 + 0.04, 0);
+                b1.rotation.set(Math.PI / 4, Math.PI / 2, 0);
+                box.add(b1);
+                
+                const b2 = new THREE.Mesh(bowGeo, bowMat);
+                b2.position.set(0.07, h / 2 + 0.04, 0);
+                b2.rotation.set(-Math.PI / 4, Math.PI / 2, 0);
+                box.add(b2);
+                
+                const knot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), bowMat);
+                knot.position.y = h / 2 + 0.04;
+                box.add(knot);
+                
+                scene.add(box);
+                gifts.push(box);
+            }
+        }
+        
+        function createSnow() {
+            const count = config.snowCount;
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(count * 3);
+            const vel = new Float32Array(count * 3);
+            
+            for (let i = 0; i < count; i++) {
+                pos[i * 3] = (Math.random() - 0.5) * 50;
+                pos[i * 3 + 1] = Math.random() * 35;
+                pos[i * 3 + 2] = (Math.random() - 0.5) * 50;
+                vel[i * 3 + 1] = -(0.2 + Math.random() * 0.5);
+                vel[i * 3] = (Math.random() - 0.5) * 0.15;
+                vel[i * 3 + 2] = (Math.random() - 0.5) * 0.15;
+            }
+            
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            geo.setAttribute('velocity', new THREE.BufferAttribute(vel, 3));
+            
+            // Snowflake texture
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.3, 'rgba(255,255,255,0.6)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 32, 32);
+            
+            snowSystem = new THREE.Points(geo, new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.12,
+                map: new THREE.CanvasTexture(canvas),
+                transparent: true,
+                opacity: 0.7,
+                depthWrite: false,
+                blending: THREE.NormalBlending // Changed from Additive to avoid glow
+            }));
+            scene.add(snowSystem);
+        }
+        
+        function createStars() {
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(1200 * 3);
+            
+            for (let i = 0; i < 1200; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 150 + Math.random() * 100;
+                pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+                pos[i * 3 + 1] = Math.abs(r * Math.cos(phi)) + 20;
+                pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+            }
+            
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            
+            scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.5,
+                transparent: true,
+                opacity: 0.6
+            })));
+        }
+        
+        function setupEvents() {
+            const canvas = renderer.domElement;
+            
+            canvas.addEventListener('pointerdown', e => {
+                isDragging = true;
+                prevMouseX = e.clientX;
+                prevMouseY = e.clientY;
+            });
+            
+            window.addEventListener('pointermove', e => {
+                if (!isDragging) return;
+                targetAngle -= (e.clientX - prevMouseX) * 0.005;
+                targetHeight = Math.max(0.1, Math.min(0.8, targetHeight + (e.clientY - prevMouseY) * 0.002));
+                prevMouseX = e.clientX;
+                prevMouseY = e.clientY;
+                autoRotate = false;
+            });
+            
+            window.addEventListener('pointerup', () => isDragging = false);
+            window.addEventListener('pointercancel', () => isDragging = false);
+            
+            canvas.addEventListener('wheel', e => {
+                e.preventDefault();
+                targetRadius = Math.max(12, Math.min(45, targetRadius + e.deltaY * 0.03));
+            }, { passive: false });
+            
+            canvas.addEventListener('click', onClick);
+            
+            canvas.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) e.preventDefault();
+            }, { passive: false });
+            
+            document.getElementById('snowToggle').addEventListener('click', () => {
+                snowEnabled = !snowEnabled;
+                document.getElementById('snowToggle').classList.toggle('active', snowEnabled);
+                gsap.to(snowSystem.material, { opacity: snowEnabled ? 0.7 : 0, duration: 0.5 });
+            });
+            
+            document.getElementById('musicToggle').addEventListener('click', toggleMusic);
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+            document.getElementById('giftModal').addEventListener('click', e => {
+                if (e.target.id === 'giftModal') closeModal();
+            });
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                composer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        function onClick(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            
+            const giftHits = raycaster.intersectObjects(gifts, true);
+            if (giftHits.length > 0) {
+                let gift = giftHits[0].object;
+                while (gift.parent && !gift.userData.isGift) gift = gift.parent;
+                
+                if (gift.userData.isGift) {
+                    gsap.to(gift.rotation, { y: gift.rotation.y + Math.PI * 2, duration: 0.5, ease: "back.out(1.5)" });
+                    gsap.to(gift.position, { y: gift.userData.baseY + 0.5, duration: 0.25, yoyo: true, repeat: 1 });
+                    setTimeout(() => openModal(gift.userData.msgIdx), 300);
+                }
+                return;
+            }
+            
+            if (starGroup) {
+                const starHits = raycaster.intersectObject(starGroup, true);
+                if (starHits.length > 0) {
+                    launchFireworks();
+                    gsap.to(starGroup.scale, { x: 1.4, y: 1.4, z: 1.4, duration: 0.2, yoyo: true, repeat: 1 });
+                }
+            }
+        }
+        
+        function openModal(idx) {
+            const m = giftMessages[idx];
+            document.getElementById('modalIcon').textContent = m.icon;
+            document.getElementById('modalTitle').textContent = m.title;
+            document.getElementById('modalMessage').textContent = m.message;
+            document.getElementById('giftModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('giftModal').classList.remove('active');
+        }
+        
+        // Audio element for MP3
+        let audioElement = null;
+        
+        function toggleMusic() {
+            const btn = document.getElementById('musicToggle');
+            
+            if (!audioElement) {
+                audioElement = new Audio('christmas-music.mp3');
+                audioElement.loop = true;
+                audioElement.volume = 0.5;
+            }
+            
+            if (musicPlaying) {
+                audioElement.pause();
+                musicPlaying = false;
+                btn.classList.remove('active');
+            } else {
+                audioElement.play().catch(e => {
+                    console.log('Audio play failed, user interaction needed:', e);
+                });
+                musicPlaying = true;
+                btn.classList.add('active');
+            }
+        }
+        
+        // Fireworks System
+        function initFireworksSystem() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const positions = new Float32Array(MAX_PARTICLES * 3);
+            const colors = new Float32Array(MAX_PARTICLES * 3);
+            
+            for (let i = 0; i < MAX_PARTICLES; i++) {
+                positions[i * 3 + 1] = -500;
+            }
+            
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            
+            const mat = new THREE.PointsMaterial({
+                size: 2.0,
+                map: texture,
+                vertexColors: true,
+                transparent: true,
+                opacity: 1,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            
+            fireworkParticles = new THREE.Points(geo, mat);
+            fireworkParticles.frustumCulled = false;
+            scene.add(fireworkParticles);
+        }
+        
+        function launchFireworks() {
+            const colorList = [[1, 0.2, 0.2], [1, 0.8, 0.2], [0.2, 1, 0.3], [0.3, 0.8, 1], [1, 0.3, 0.8]];
+            fireworkData = [];
+            
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.5;
+                    const distance = 22 + Math.random() * 12;
+                    const x = Math.cos(angle) * distance;
+                    const z = Math.sin(angle) * distance;
+                    const y = 14 + Math.random() * 8;
+                    const color = colorList[i % colorList.length];
+                    
+                    for (let j = 0; j < 80; j++) {
+                        const theta = Math.random() * Math.PI * 2;
+                        const phi = Math.acos(2 * Math.random() - 1);
+                        const speed = 0.15 + Math.random() * 0.25;
+                        
+                        fireworkData.push({
+                            x, y, z,
+                            vx: Math.sin(phi) * Math.cos(theta) * speed,
+                            vy: Math.sin(phi) * Math.sin(theta) * speed,
+                            vz: Math.cos(phi) * speed,
+                            r: color[0], g: color[1], b: color[2],
+                            life: 1.0, decay: 0.008 + Math.random() * 0.008
+                        });
+                    }
+                }, i * 250);
+            }
+        }
+        
+        function updateFireworks() {
+            if (!fireworkParticles || fireworkData.length === 0) return;
+            const positions = fireworkParticles.geometry.attributes.position.array;
+            const colors = fireworkParticles.geometry.attributes.color.array;
+            
+            for (let i = fireworkData.length - 1; i >= 0; i--) {
+                const p = fireworkData[i];
+                p.x += p.vx; p.y += p.vy; p.z += p.vz;
+                p.vy -= 0.004; p.life -= p.decay;
+                
+                if (p.life <= 0) fireworkData.splice(i, 1);
+            }
+            
+            for (let i = 0; i < MAX_PARTICLES; i++) {
+                if (i < fireworkData.length) {
+                    const p = fireworkData[i];
+                    positions[i * 3] = p.x;
+                    positions[i * 3 + 1] = p.y;
+                    positions[i * 3 + 2] = p.z;
+                    colors[i * 3] = p.r * p.life;
+                    colors[i * 3 + 1] = p.g * p.life;
+                    colors[i * 3 + 2] = p.b * p.life;
+                } else {
+                    positions[i * 3 + 1] = -500;
+                }
+            }
+            fireworkParticles.geometry.attributes.position.needsUpdate = true;
+            fireworkParticles.geometry.attributes.color.needsUpdate = true;
+        }
+        
+        function updateCamera() {
+            const y = 4 + cameraHeight * 10;
+            const r = cameraRadius * Math.cos(cameraHeight * 0.5);
+            camera.position.set(Math.sin(cameraAngle) * r, y, Math.cos(cameraAngle) * r);
+            camera.lookAt(0, 5, 0);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const t = clock.getElapsedTime();
+            
+            if (autoRotate && !isDragging) targetAngle += 0.0015;
+            cameraAngle += (targetAngle - cameraAngle) * 0.05;
+            cameraHeight += (targetHeight - cameraHeight) * 0.05;
+            cameraRadius += (targetRadius - cameraRadius) * 0.05;
+            updateCamera();
+            
+            updateFireworks();
+            
+            // Magic Dust
+            if (magicParticles) {
+                const pos = magicParticles.geometry.attributes.position.array;
+                const speeds = magicParticles.geometry.attributes.speed.array;
+                for (let i = 0; i < 200; i++) {
+                    const idx = i * 3;
+                    const speed = speeds[i];
+                    const x = pos[idx];
+                    const z = pos[idx + 2];
+                    const r = Math.sqrt(x * x + z * z);
+                    const currentAngle = Math.atan2(z, x) + 0.003 * speed;
+                    
+                    pos[idx] = Math.cos(currentAngle) * r;
+                    pos[idx + 1] += 0.008 * speed;
+                    pos[idx + 2] = Math.sin(currentAngle) * r;
+                    
+                    if (pos[idx + 1] > 11) pos[idx + 1] = 0;
+                }
+                magicParticles.geometry.attributes.position.needsUpdate = true;
+            }
+            
+            // Snow
+            if (snowEnabled && snowSystem) {
+                const pos = snowSystem.geometry.attributes.position.array;
+                const vel = snowSystem.geometry.attributes.velocity.array;
+                for (let i = 0; i < config.snowCount; i++) {
+                    const idx = i * 3;
+                    pos[idx] += vel[idx] + Math.sin(t * 0.5 + i) * 0.008;
+                    pos[idx + 1] += vel[idx + 1];
+                    pos[idx + 2] += vel[idx + 2] + Math.cos(t * 0.4 + i) * 0.008;
+                    
+                    if (pos[idx + 1] < -1) {
+                        pos[idx] = (Math.random() - 0.5) * 50;
+                        pos[idx + 1] = 35;
+                        pos[idx + 2] = (Math.random() - 0.5) * 50;
+                    }
+                }
+                snowSystem.geometry.attributes.position.needsUpdate = true;
+            }
+            
+            // Lights twinkle
+            fairyLights.forEach(l => {
+                const intensity = (Math.sin(t * l.speed + l.phase) + 1) * 0.5;
+                l.mesh.material.opacity = intensity > 0.3 ? 1 : 0.15;
+            });
+            
+            // Ornaments bob
+            ornaments.forEach(o => {
+                o.mesh.position.y = o.baseY + Math.sin(t * 0.7 + o.phase) * 0.015;
+                o.mesh.rotation.y += 0.005;
+            });
+            
+            // Star animation
+            if (starGroup) {
+                starGroup.rotation.y = t * 0.25;
+                if (starGroup.userData.glow) {
+                    starGroup.userData.glow.material.opacity = 0.12 + Math.sin(t * 2) * 0.06;
+                }
+                if (treeGroup.userData.starLight) {
+                    treeGroup.userData.starLight.intensity = 1.8 + Math.sin(t * 2.5) * 0.6;
+                }
+            }
+            
+            composer.render();
+        }
+    </script>
+</body>
+</html>
