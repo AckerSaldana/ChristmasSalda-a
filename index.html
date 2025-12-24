@@ -691,21 +691,21 @@
         }
         
         function addDecorations(layer, idx) {
-            // Fewer ornaments on upper layers (smaller cones)
-            const ornCount = Math.max(1, 5 - idx);
-            const lightCount = Math.max(2, 7 - idx);
+            // More ornaments on lower/larger layers, fewer on top
+            const ornCount = Math.max(2, 6 - Math.floor(idx / 2));
+            const lightCount = Math.max(3, 8 - idx);
             
-            // Skip ornaments on the top 2 smallest layers
-            if (idx >= 6) return;
+            // Skip decorations on the top 2 smallest layers (near the star)
+            if (idx >= 7) return;
             
             // Ornaments
             for (let i = 0; i < ornCount; i++) {
                 const angle = (i / ornCount) * Math.PI * 2 + idx * 0.5;
-                const hPct = 0.3 + Math.random() * 0.35; // Keep them in middle of each cone
-                const r = layer.r * (1 - hPct) * 0.85; // Slightly inside the cone surface
+                const hPct = 0.25 + Math.random() * 0.4;
+                const r = layer.r * (1 - hPct) * 0.92 + 0.1; // On the surface of the cone
                 
                 const color = config.ornamentColors[Math.floor(Math.random() * config.ornamentColors.length)];
-                const size = 0.12 + Math.random() * 0.08;
+                const size = 0.15 + Math.random() * 0.1;
                 
                 const orb = new THREE.Mesh(
                     new THREE.SphereGeometry(size, 16, 16),
@@ -730,12 +730,12 @@
             for (let i = 0; i < lightCount; i++) {
                 const angle = (i / lightCount) * Math.PI * 2 + idx * 1.1;
                 const hPct = 0.2 + Math.random() * 0.5;
-                const r = layer.r * (1 - hPct) * 0.9;
+                const r = layer.r * (1 - hPct) * 0.95 + 0.05;
                 
                 const color = config.lightColors[Math.floor(Math.random() * config.lightColors.length)];
                 
                 const light = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.05, 8, 8),
+                    new THREE.SphereGeometry(0.06, 8, 8),
                     new THREE.MeshBasicMaterial({ color })
                 );
                 
@@ -868,7 +868,7 @@
                 box.receiveShadow = true;
                 box.userData = { isGift: true, msgIdx: i % giftMessages.length, baseY: yPos };
                 
-                // Bright white ribbon
+                // Ribbon material
                 const ribMat = new THREE.MeshStandardMaterial({ 
                     color: 0xffffff,
                     roughness: 0.2,
@@ -876,16 +876,22 @@
                     emissive: 0xffffff,
                     emissiveIntensity: 0.1
                 });
-                const t = 0.06;
+                const t = 0.05;
+                const offset = 0.005; // Small offset to prevent z-fighting
                 
-                const r1 = new THREE.Mesh(new THREE.BoxGeometry(w + 0.01, t, d + 0.01), ribMat);
-                r1.position.y = h / 2 - t / 2;
+                // Horizontal ribbon on top - raised above surface
+                const r1 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.95, t, d * 0.95), ribMat);
+                r1.position.y = h / 2 + t / 2 + offset;
                 box.add(r1);
                 
-                const r2 = new THREE.Mesh(new THREE.BoxGeometry(t, h + 0.01, d + 0.01), ribMat);
+                // Vertical ribbon front-back - slightly smaller to not overlap edges
+                const r2 = new THREE.Mesh(new THREE.BoxGeometry(t, h * 0.98, d + offset * 2), ribMat);
+                r2.position.y = 0;
                 box.add(r2);
                 
-                const r3 = new THREE.Mesh(new THREE.BoxGeometry(w + 0.01, h + 0.01, t), ribMat);
+                // Vertical ribbon left-right
+                const r3 = new THREE.Mesh(new THREE.BoxGeometry(w + offset * 2, h * 0.98, t), ribMat);
+                r3.position.y = 0;
                 box.add(r3);
                 
                 // Gold bow
@@ -899,17 +905,17 @@
                 const bowGeo = new THREE.TorusGeometry(0.1, 0.03, 8, 12);
                 
                 const b1 = new THREE.Mesh(bowGeo, bowMat);
-                b1.position.set(-0.07, h / 2 + 0.04, 0);
+                b1.position.set(-0.07, h / 2 + t + 0.02, 0);
                 b1.rotation.set(Math.PI / 4, Math.PI / 2, 0);
                 box.add(b1);
                 
                 const b2 = new THREE.Mesh(bowGeo, bowMat);
-                b2.position.set(0.07, h / 2 + 0.04, 0);
+                b2.position.set(0.07, h / 2 + t + 0.02, 0);
                 b2.rotation.set(-Math.PI / 4, Math.PI / 2, 0);
                 box.add(b2);
                 
                 const knot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), bowMat);
-                knot.position.y = h / 2 + 0.04;
+                knot.position.y = h / 2 + t + 0.02;
                 box.add(knot);
                 
                 scene.add(box);
